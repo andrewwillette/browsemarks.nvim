@@ -1,0 +1,4 @@
+.deps
+
+# luacov.stats.out, luacov.report.out
+/luacov*
