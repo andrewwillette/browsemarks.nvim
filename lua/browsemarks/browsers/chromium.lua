@@ -27,6 +27,7 @@ local function get_profile_dir(config)
     return utils.join_path(config_dir, "Default")
   end
 
+  -- state_file holds the profile information for the browser.
   local state_file = utils.join_path(config_dir, "Local State")
   local file = io.open(state_file, "r")
   if not file then
@@ -43,8 +44,8 @@ local function get_profile_dir(config)
   file:close()
   local data = vim.json.decode(content)
   ---@cast data table
-
   for profile_dir, profile_info in pairs(data.profile.info_cache) do
+    -- 'Default' set above
     if profile_info.name == config.profile_name then
       return utils.join_path(config_dir, profile_dir)
     end
@@ -58,17 +59,31 @@ local function get_profile_dir(config)
   )
 end
 
+-- Construct the path from the root to the bookmark.
+---@param parent_path string
+---@param bookmark Bookmark
+function chromium._construct_path_with_parent(parent_path, bookmark)
+  local path = parent_path
+      and (parent_path ~= "" and parent_path .. "/" .. bookmark.name or bookmark.name)
+      or ""
+  return path
+end
+
 -- Parse the bookmarks data to a lua table.
 ---@param data table
----@return Bookmark[]?
+---@return Bookmark[] bookmarks
+---@return Bookmark[] folders
 local function parse_bookmarks_data(data)
   local items = {}
+  local folders = {}
 
-  local function insert_items(parent, bookmark)
-    local path = parent
-        and (parent ~= "" and parent .. "/" .. bookmark.name or bookmark.name)
-        or ""
+  local function insert_items(parent_path, bookmark)
+    local path = chromium._construct_path_with_parent(parent_path, bookmark)
+    -- local path = parent_path
+    --     and (parent_path ~= "" and parent_path .. "/" .. bookmark.name or bookmark.name)
+    --     or ""
     if bookmark.type == "folder" then
+      table.insert(folders, { name = bookmark.name, path = path, url = bookmark.url })
       for _, child in ipairs(bookmark.children) do
         insert_items(path, child)
       end
@@ -84,16 +99,18 @@ local function parse_bookmarks_data(data)
   for _, category in ipairs(categories) do
     insert_items(nil, data.roots[category])
   end
-  return items
+  return items, folders
 end
 
 -- Collect all the bookmarks for Chromium based browsers.
 ---@param config BrowsemarksConfig
----@return Bookmark[]?
+---@return Bookmark[] items
+---@return Bookmark[] folders
 function chromium.collect_bookmarks(config)
   local profile_dir = get_profile_dir(config)
   if profile_dir == nil then
-    return nil
+    utils.warn(("No profile directory found for %s"):format(config.selected_browser))
+    return nil, nil
   end
 
   local filepath = utils.join_path(profile_dir, "Bookmarks")
@@ -105,7 +122,7 @@ function chromium.collect_bookmarks(config)
         filepath
       )
     )
-    return nil
+    return nil, nil
   end
 
   local content = file:read "*a"
