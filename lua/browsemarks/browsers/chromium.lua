@@ -1,4 +1,3 @@
----@diagnostic disable: return-type-mismatch
 local chromium = {}
 
 local utils = require "browsemarks.utils"
@@ -106,8 +105,8 @@ end
 
 -- Collect all the bookmarks for Chromium based browsers.
 ---@param config BrowsemarksConfig
----@return Bookmark[] items
----@return Bookmark[] folders
+---@return Bookmark[]? items
+---@return Bookmark[]? folders
 function chromium.collect_bookmarks(config)
   local profile_dir = get_profile_dir(config)
   if profile_dir == nil then
@@ -154,17 +153,9 @@ local function get_folder_names(folders)
   return names
 end
 
-local function select_folder(folder_names)
-  vim.ui.select(folder_names, {
-    prompt = 'folder for new bookmark:',
-  }, function(choice)
-
-  end)
-end
-
 -- create keymap 'tm' running this function
 --@param bookmarks Bookmark[]
-function chromium.new_bookmark(bookmarks)
+function chromium.new_bookmark()
   _, folders = chromium.collect_bookmarks { selected_browser = "chrome" }
   folder_names = get_folder_names(folders)
   vim.ui.select(folder_names, {

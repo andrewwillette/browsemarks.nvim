@@ -1,12 +1,12 @@
 ---@class BrowsemarksConfig
----@field full_path boolean
+---@field full_path? boolean
 ---@field selected_browser Browser
----@field url_open_command string
+---@field url_open_command? string
 ---@field url_open_plugin? 'open_browser'|'vim_external'
 ---@field profile_name? string
----@field buku_include_tags boolean
+---@field buku_include_tags? boolean
 ---@field config_dir? string
----@field debug boolean
+---@field debug? boolean
 
 ---@class Bookmark
 ---@field name string Bookmark name
