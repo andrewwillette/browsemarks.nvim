@@ -13,9 +13,6 @@ describe("chromium", function()
 
   describe("collect_bookmarks", function()
     it("should return all the bookmarks and folders for chromium", function()
-      bookmarks, folders = chromium.collect_bookmarks { selected_browser = "chrome" }
-      -- print(vim.inspect(folders))
-      -- print(vim.inspect(bookmarks))
       local chrome_json_location = utils.get_config_dir("chrome") .. "/Bookmarks"
       local chrome_json = io.open(chrome_json_location, "r")
 
