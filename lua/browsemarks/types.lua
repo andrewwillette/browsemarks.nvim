@@ -13,3 +13,4 @@
 ---@field path string Full path from root to the name separated by '/'
 ---@field url string Bookmark URL
 ---@field tags? string Comma separated tags (only for buku)
+---@field children? Bookmark[] Children bookmarks

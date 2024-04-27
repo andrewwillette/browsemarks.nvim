@@ -153,8 +153,6 @@ function chromium.collect_folders(config)
   return parse_data_folders(data)
 end
 
-chromium._get_profile_dir = get_profile_dir
-
 local function get_folder_paths(folders)
   local names = {}
   for _, folder in ipairs(folders) do
@@ -164,7 +162,10 @@ local function get_folder_paths(folders)
 end
 
 
-function split(inputstr, sep)
+---@param inputstr string
+---@param sep string
+---@return string[]
+local function split(inputstr, sep)
   if sep == nil then
     sep = "%s"
   end
@@ -175,36 +176,65 @@ function split(inputstr, sep)
   return t
 end
 
-function get_bookmark_with_path(path)
-  -- print("calling get_bookmark_with_path with arg: " .. path)
-  --@cast data table
+local function add_bookmark(new_bookmark, bookmark_folder_path)
   local data = get_bookmark_data({ selected_browser = "chrome" })
+  ---@cast data table
   local bookmarks = data.roots["bookmark_bar"]
-  local path_table = split(path, "/")
-  print("path table: " .. vim.inspect(path_table))
+  if bookmark_folder_path == "" then
+    table.insert(bookmarks.children, new_bookmark)
+  else
+    local path_table = split(bookmark_folder_path, "/")
+    local current_folder = bookmarks
+
+    local function find_bookmark_in_folder(bookmark_folder, name)
+      for _, child in ipairs(bookmark_folder.children) do
+        if child.name == name then
+          return child
+        end
+      end
+    end
+    for _, name in ipairs(path_table) do
+      current_folder = find_bookmark_in_folder(current_folder, name)
+    end
+    table.insert(current_folder.children, new_bookmark)
+  end
+  local profile_dir = get_profile_dir({ selected_browser = "chrome" })
+  local filepath = utils.join_path(profile_dir, "Bookmarks")
+  local file = io.open(filepath, "w")
+  if not file then
+    utils.warn(
+      ("No %s bookmarks file found at: %s"):format(
+        "chrome",
+        filepath
+      )
+    )
+    return nil, nil
+  end
+  file:write(vim.json.encode(data))
+  file:close()
 end
 
--- create keymap 'tm' running this function
---@param bookmarks Bookmark[]
 function chromium.new_bookmark()
-  folders = chromium.collect_folders { selected_browser = "chrome" }
-  folder_paths = get_folder_paths(folders)
+  bookmark_folders = chromium.collect_folders { selected_browser = "chrome" }
+  folder_paths = get_folder_paths(bookmark_folders)
   vim.ui.select(folder_paths, {
     prompt = 'folder for new bookmark: ',
   }, function(folder_path)
-    local bookmark_data = get_bookmark_with_path(folder_path)
-    -- vim.ui.input({
-    --   prompt = 'bookmark name: ',
-    -- }, function(bookmark_name)
-    -- end)
+    vim.ui.input({
+      prompt = 'bookmark name: ',
+    }, function(bookmark_name)
+      vim.ui.input({
+        prompt = 'bookmark name: ',
+      }, function(bookmark_url)
+        local new_bookmark = {
+          name = bookmark_name,
+          url = bookmark_url,
+          type = 'url',
+        }
+        add_bookmark(new_bookmark, folder_path)
+      end)
+    end)
   end)
-end
-
-function add_bookmark(bookmark, folder)
-  -- get the full data from disk
-  -- update the data.bookmarks.'folder'.children with new bookmark
-  -- write the data back to disk
-  -- local data =
 end
 
 -- for quick testing during development
