@@ -10,7 +10,7 @@ function M.setup(opts)
 end
 
 function M.add_bookmark()
-  chromium.add_bookmark()
+  chromium.new_bookmark()
 end
 
 return M
