@@ -1,22 +1,39 @@
 local utils = {}
 
-local Browser = require "browsemarks.enum".Browser
+---@enum Browser
+local Browser = {
+  BRAVE = "brave",
+  CHROME = "chrome",
+  -- ARC = "arc",
+  -- BRAVE_BETA = "brave_beta",
+  -- BUKU = "buku",
+  -- CHROME_BETA = "chrome_beta",
+  -- CHROMIUM = "chromium",
+  -- EDGE = "edge",
+  -- FIREFOX = "firefox",
+  -- QUTEBROWSER = "qutebrowser",
+  -- RAINDROP = "raindrop",
+  -- SAFARI = "safari",
+  -- VIVALDI = "vivaldi",
+  -- WATERFOX = "waterfox",
+}
+
 local config = require "browsemarks.config"
 local state = require "browsemarks.state"
 
 local default_config_dir = {
   Darwin = {
-    [Browser.ARC] = {
-      "Library",
-      "Application Support",
-      "Arc",
-      "User Data",
-    },
     [Browser.BRAVE] = {
       "Library",
       "Application Support",
       "BraveSoftware",
       "Brave-Browser",
+    },
+    [Browser.ARC] = {
+      "Library",
+      "Application Support",
+      "Arc",
+      "User Data",
     },
     [Browser.BRAVE_BETA] = {
       "Library",
@@ -228,9 +245,9 @@ function utils.get_config_dir(selected_browser)
     if not utils.path_exists(config_dir) then
       utils.warn(
         (
-        "No such directory for %s browser: %s "
-            .. "(make sure to provide the absolute path which includes "
-            .. "the home directory as well)"
+          "No such directory for %s browser: %s "
+          .. "(make sure to provide the absolute path which includes "
+          .. "the home directory as well)"
         ):format(selected_browser, config_dir)
       )
       return nil
